@@ -26,7 +26,10 @@ const getInitialContext = () => {
   }
 
   const savedContext = localStorage.getItem("context");
-  const parsedContext = savedContext ? JSON.parse(savedContext) : { activeStep: 0 };
+  if (!savedContext) {
+    return { activeStep: 0 };
+  }
+  const parsedContext = JSON.parse(savedContext);
 
   return {
     activeStep: parsedContext.activeStep ?? 0,
@@ -34,9 +37,7 @@ const getInitialContext = () => {
 };
 
 const ContextProvider = ({ children }: { children: ReactNode }) => {
-  const [context, setContext] = useState({
-    activeStep: getInitialContext().activeStep,
-  });
+  const [context, setContext] = useState(() => getInitialContext());
   const setNewContext = (context: ContextInterface) => {
     localStorage.setItem("context", JSON.stringify(context));
     setContext(context);
