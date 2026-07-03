@@ -1,3 +1,4 @@
+@import url('https://fonts.googleapis.com/css2?family=Archivo:ital,wght@0,100..900;1,100..900&family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap');
 @import "tailwindcss";
 
 :root {
@@ -19,8 +20,115 @@
   }
 }
 
+html, body {
+  font-family: 'Archivo', sans-serif;
+}
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+}
+
+header {
+  height: 80px;
+  background-color: #FFFFFF ;
+}
+
+.first-section {
+  background-image: url('/first-section-bg.png');
+  background-size: cover;
+  background-position: center;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.7s ease both;
+}
+
+.delay-100 { animation-delay: 0.1s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-700 { animation-delay: 0.7s; }
+
+@keyframes footerMarquee {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-18%);
+  }
+}
+
+.footer-strip {
+  position: relative;
+}
+
+.footer-strip::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(250, 204, 21, 0.1), transparent 22%, transparent 78%, rgba(250, 204, 21, 0.08)),
+    radial-gradient(circle at 20% 50%, rgba(250, 204, 21, 0.14), transparent 28%);
+  pointer-events: none;
+}
+
+.footer-marquee {
+  animation: footerMarquee 22s linear infinite alternate;
+  will-change: transform;
+}
+
+@media (max-width: 768px) {
+  .footer-marquee {
+    animation-duration: 16s;
+  }
+}
+
+/* Dark accordion */
+.accordion-dark .accordion-item {
+  background-color: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px !important;
+  margin-bottom: 12px;
+  overflow: hidden;
+}
+
+.accordion-dark .accordion-button {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  font-size: 1rem;
+  font-weight: 600;
+  box-shadow: none;
+  padding: 1.2rem 1.5rem;
+}
+
+.accordion-dark .accordion-button:not(.collapsed) {
+  background-color: rgba(255, 193, 7, 0.15);
+  color: #ffc107;
+  box-shadow: none;
+}
+
+.accordion-dark .accordion-button::after {
+  filter: invert(1);
+}
+
+.accordion-dark .accordion-button:not(.collapsed)::after {
+  filter: invert(1) sepia(1) saturate(5) hue-rotate(0deg);
+}
+
+.accordion-dark .accordion-body {
+  background-color: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.75);
+  font-size: 1.15rem;
+  line-height: 1.8;
+  padding: 1.2rem 1.5rem;
 }
