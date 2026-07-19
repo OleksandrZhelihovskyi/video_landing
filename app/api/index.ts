@@ -59,9 +59,9 @@ export const analyzeVideo = async (
   formData.append("line2", line2.toString());
   formData.append("distance", distance.toString());
   console.log("Night mode:", night);
-  // if (night) {
+  if (night) {
     formData.append("night", "true");
-  // }
+  }
   if (calibrationMode === "vertical") {
     formData.append("vertical", "true");
   } else {

@@ -229,7 +229,10 @@ const CustomStepper = () => {
     if (!selectedVideo) {
       return;
     }
-
+    if (analyzedVideoUrl) {
+      URL.revokeObjectURL(analyzedVideoUrl);
+      setAnalyzedVideoUrl(null);
+    }
     setAnalysisError(null);
 
     await analyze.mutateAsync({
