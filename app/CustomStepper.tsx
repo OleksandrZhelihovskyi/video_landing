@@ -315,7 +315,7 @@ const CustomStepper = () => {
 
     const s = io(`${socketBaseUrl}/ws/status`, {
       path: "/socket.io",
-      transports: ["polling"], // only polling
+      transports: ["websocket", "polling"], // only polling
       rememberUpgrade: false, // disable ws upgrade memory
       autoConnect: true,
       reconnection: true,
