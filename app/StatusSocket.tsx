@@ -69,7 +69,10 @@ const mergeAnalyzeProgress = (
   };
 };
 
-export const StatusSocket: React.FC = () => {
+export const StatusSocket: React.FC<{
+  isOpen: boolean;
+  setIsOpen: React.Dispatch<React.SetStateAction<boolean>>;
+}> = ({ isOpen, setIsOpen }) => {
   const [socketConnected, setSocketConnected] = useState(false);
   const contextData = useContext(Context);
   if (!contextData) {
@@ -151,80 +154,109 @@ export const StatusSocket: React.FC = () => {
     };
   }, [setContext]);
   return (
-    <aside className="pointer-events-none fixed right-3 top-3 z-50 w-[190px] rounded-xl border border-white/15 bg-slate-950/80 p-2.5 text-white shadow-[0_12px_26px_rgba(0,0,0,0.3)] backdrop-blur-md">
-      <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
-        <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-300">
-          Queue status
-        </p>
+    <div className="fixed right-3 top-3 z-50 flex max-w-[calc(100vw-1.5rem)] flex-col items-end gap-2">
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className="pointer-events-auto inline-flex items-center gap-2 rounded-full border border-amber-300/40 bg-slate-950/85 px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-amber-200 shadow-[0_12px_28px_rgba(0,0,0,0.35)] backdrop-blur-md transition hover:border-amber-300/70 hover:bg-slate-900/90"
+        aria-expanded={isOpen}
+        aria-controls="queue-status-panel"
+      >
         <span
           className={[
-            "inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.08em]",
-            socketConnected ? "text-emerald-300" : "text-red-300",
+            "h-1.5 w-1.5 rounded-full",
+            socketConnected ? "bg-emerald-300" : "bg-red-300",
           ].join(" ")}
+        />
+        Status
+      </button>
+
+      {isOpen && (
+        <aside
+          id="queue-status-panel"
+          className="pointer-events-auto w-[min(260px,calc(100vw-1.5rem))] rounded-xl border border-white/15 bg-slate-950/88 p-2.5 text-white shadow-[0_16px_34px_rgba(0,0,0,0.4)] backdrop-blur-md"
         >
-          <span
-            className={[
-              "h-1.5 w-1.5 rounded-full",
-              socketConnected ? "bg-emerald-300" : "bg-red-300",
-            ].join(" ")}
-          />
-          {socketConnected ? "Live" : "Offline"}
-        </span>
-      </div>
+          <div className="flex items-center justify-between gap-2 border-b border-white/10 pb-1.5">
+            <p className="text-[9px] font-bold uppercase tracking-[0.14em] text-amber-300">
+              Queue status
+            </p>
+            <span
+              className={[
+                "inline-flex items-center gap-1 text-[9px] font-semibold uppercase tracking-[0.08em]",
+                socketConnected ? "text-emerald-300" : "text-red-300",
+              ].join(" ")}
+            >
+              <span
+                className={[
+                  "h-1.5 w-1.5 rounded-full",
+                  socketConnected ? "bg-emerald-300" : "bg-red-300",
+                ].join(" ")}
+              />
+              {socketConnected ? "Live" : "Offline"}
+            </span>
+          </div>
 
-      <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs">
-        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-          <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
-            Active
-          </p>
-          <p className="mt-0.5 text-sm font-semibold text-white">{q.active}</p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-          <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
-            Waiting
-          </p>
-          <p className="mt-0.5 text-sm font-semibold text-white">{q.waiting}</p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-          <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
-            Max conc.
-          </p>
-          <p className="mt-0.5 text-sm font-semibold text-white">
-            {q.max_concurrent}
-          </p>
-        </div>
-        <div className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-          <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
-            Max wait
-          </p>
-          <p className="mt-0.5 text-sm font-semibold text-white">
-            {q.max_waiting}
-          </p>
-        </div>
-      </div>
-
-      {q.analysis && (
-        <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
-          <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
-            Analysis
-          </p>
-          <p className="mt-0.5 text-[11px] font-semibold text-white">
-            {q.analysis.status || "idle"}
-            {typeof q.analysis.progress_percent === "number"
-              ? ` · ${Math.round(q.analysis.progress_percent)}%`
-              : ""}
-          </p>
-          {typeof q.analysis.frame === "number" &&
-            typeof q.analysis.total_frames === "number" && (
-              <p className="text-[10px] text-white/60">
-                {q.analysis.frame}/{q.analysis.total_frames} frames
+          <div className="mt-2 grid grid-cols-2 gap-1.5 text-xs">
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
+              <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
+                Active
               </p>
-            )}
-          {q.analysis.message && (
-            <p className="text-[10px] text-white/60">{q.analysis.message}</p>
+              <p className="mt-0.5 text-sm font-semibold text-white">
+                {q.active}
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
+              <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
+                Waiting
+              </p>
+              <p className="mt-0.5 text-sm font-semibold text-white">
+                {q.waiting}
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
+              <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
+                Max conc.
+              </p>
+              <p className="mt-0.5 text-sm font-semibold text-white">
+                {q.max_concurrent}
+              </p>
+            </div>
+            <div className="rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
+              <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
+                Max wait
+              </p>
+              <p className="mt-0.5 text-sm font-semibold text-white">
+                {q.max_waiting}
+              </p>
+            </div>
+          </div>
+
+          {q.analysis && (
+            <div className="mt-2 rounded-lg border border-white/10 bg-white/[0.03] px-2 py-1.5">
+              <p className="text-[8px] uppercase tracking-[0.12em] text-white/55">
+                Analysis
+              </p>
+              <p className="mt-0.5 text-[11px] font-semibold text-white">
+                {q.analysis.status || "idle"}
+                {typeof q.analysis.progress_percent === "number"
+                  ? ` · ${Math.round(q.analysis.progress_percent)}%`
+                  : ""}
+              </p>
+              {typeof q.analysis.frame === "number" &&
+                typeof q.analysis.total_frames === "number" && (
+                  <p className="text-[10px] text-white/60">
+                    {q.analysis.frame}/{q.analysis.total_frames} frames
+                  </p>
+                )}
+              {q.analysis.message && (
+                <p className="text-[10px] text-white/60">
+                  {q.analysis.message}
+                </p>
+              )}
+            </div>
           )}
-        </div>
+        </aside>
       )}
-    </aside>
+    </div>
   );
 };

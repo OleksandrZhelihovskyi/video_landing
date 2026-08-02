@@ -7,9 +7,8 @@ import {
   AccordionItem,
   Button,
 } from "react-bootstrap";
-import { Step, Stepper } from "react-form-stepper";
-import dynamic from 'next/dynamic';
-const StepperComponent = dynamic(() => import('./CustomStepper'), {
+import dynamic from "next/dynamic";
+const StepperComponent = dynamic(() => import("./CustomStepper"), {
   ssr: false,
 });
 
@@ -95,6 +94,22 @@ export function HomePageClient() {
                     charge.
                   </AccordionBody>
                 </AccordionItem>
+                <AccordionItem eventKey="3">
+                  <AccordionHeader>
+                    Where can I see video analysis status and progress?
+                  </AccordionHeader>
+                  <AccordionBody>
+                    You can see the status and progress of your video analysis
+                    in the "Status" panel located at the top-right corner of the
+                    page. The panel provides real-time updates on the analysis
+                    process, including the current status, progress percentage,
+                    and any relevant messages. We can operate 4 videos
+                    simultaneously, so if you have multiple videos in the queue,
+                    for server load reasons, the analysis of some videos may be
+                    delayed. The status panel will keep you informed about the
+                    progress of each video analysis.
+                  </AccordionBody>
+                </AccordionItem>
               </Accordion>
             </div>
           </div>
@@ -107,7 +122,11 @@ export function HomePageClient() {
             Analyse your video now
           </h2>
           <div className="row justify-content-center">
-            <div className="col-12 col-lg-10" style={{ maxWidth: "100%" }} id="stepper-container">
+            <div
+              className="col-12 col-lg-10"
+              style={{ maxWidth: "100%" }}
+              id="stepper-container"
+            >
               <StepperComponent />
             </div>
           </div>
@@ -125,17 +144,26 @@ export function HomePageClient() {
                 Preliminary AI-based assessment for road accident footage
               </span>
               <span className="h-1.5 w-1.5 rounded-full bg-amber-300/70" />
-              <a className="text-white transition-colors hover:text-amber-300" href="#stepper-container">
+              <a
+                className="text-white transition-colors hover:text-amber-300"
+                href="#stepper-container"
+              >
                 Upload video
               </a>
               <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
-              <a className="text-white transition-colors hover:text-amber-300" href="#faq">
+              <a
+                className="text-white transition-colors hover:text-amber-300"
+                href="#faq"
+              >
                 FAQ
               </a>
               <span className="h-1.5 w-1.5 rounded-full bg-white/25" />
               <span className="text-white/60">No result, no charge</span>
               <span className="h-1.5 w-1.5 rounded-full bg-amber-300/70" />
-              <a className="text-white transition-colors hover:text-amber-300" href="#top">
+              <a
+                className="text-white transition-colors hover:text-amber-300"
+                href="#top"
+              >
                 Back to top
               </a>
               <span className="h-1.5 w-1.5 rounded-full bg-white/25" />

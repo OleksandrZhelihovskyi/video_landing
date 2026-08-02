@@ -1,14 +1,14 @@
 "use client";
 
-import { MouseEvent, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { Context } from "./Context";
 import { Stepper } from "react-form-stepper";
 import { useForm } from "react-hook-form";
 import Spinner from "react-bootstrap/Spinner";
 import Button from "react-bootstrap/Button";
-import Modal from "react-bootstrap/Modal";
 import { useMutation } from "@tanstack/react-query";
 import { analyzeVideo, AnalyzeVideoResponse, calibrateVideo } from "./api";
+import { get, set } from "idb-keyval";
 
 import type {
   CalibrationVariables,
@@ -17,32 +17,24 @@ import type {
   UploadFormValues,
 } from "./interfaces";
 import { StatusSocket } from "./StatusSocket";
-
-const ZOOM_SCALE = 3;
-const LENS_SIZE = 276;
+import { PreviewModal } from "./PreviewModal";
 
 const CustomStepper = () => {
   const contextData = useContext(Context);
-
+  const [isOpen, setIsOpen] = useState(false);
   if (!contextData) {
     throw new Error("Context is not available");
   }
 
   const { context, setContext } = contextData;
   const { activeStep, image } = context;
-
   const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+
   const [analyzedVideoUrl, setAnalyzedVideoUrl] = useState<string | null>(null);
   const [analysisStats, setAnalysisStats] =
     useState<AnalyzeVideoResponse["stats"]>(null);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
-  const [isZoomVisible, setIsZoomVisible] = useState(false);
-  const [zoomPosition, setZoomPosition] = useState({
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0,
-  });
+
   const [calibrationMode, setCalibrationMode] =
     useState<CalibrationMode>("vertical");
   const {
@@ -53,13 +45,46 @@ const CustomStepper = () => {
   } = useForm<UploadFormValues>();
 
   const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
+
+  const getFromIndexedDB = useCallback(async (key: string) => {
+    try {
+      const value = await get(key);
+      return value;
+    } catch (error) {
+      console.error(`Failed to get ${key} from IndexedDB:`, error);
+      return null;
+    }
+  }, []);
+  const setToIndexedDB = useCallback(async (key: string, value: any) => {
+    try {
+      await set(key, value);
+    } catch (error) {
+      console.error(`Failed to set ${key} in IndexedDB:`, error);
+    }
+  }, []);
+
+  useMemo(async () => {
+    if (watch("video")?.[0]) {
+      await setToIndexedDB("selectedVideo", watch("video")?.[0]);
+      return;
+    }
+  }, [watch("video")?.[0]]);
+
   useEffect(() => {
     setSelectedVideo(watch("video")?.[0] ?? null);
+    const getLastVideo = async () => {
+      const lastVideo = await getFromIndexedDB("selectedVideo");
+      if (lastVideo) {
+        setSelectedVideo(lastVideo);
+      }
+    };
+    getLastVideo();
   }, [watch("video")?.[0]]);
 
   useEffect(() => {
     setCalibrationMode(watch("calibrationMode") ?? "vertical");
   }, [watch("calibrationMode")]);
+
   const submit = (data: UploadFormValues) => {
     console.log("Form submitted with data:", data);
     setContext((prev) => ({
@@ -81,6 +106,9 @@ const CustomStepper = () => {
     setAnalyzedVideoUrl(null);
     setAnalysisStats(null);
     setAnalysisError(null);
+    setToIndexedDB("selectedVideo", null).then(() => {
+      console.log("Cleared selected video from IndexedDB");
+    });
   };
 
   useEffect(() => {
@@ -110,7 +138,7 @@ const CustomStepper = () => {
       setAnalyzedVideoUrl(null);
     }
     setAnalysisError(null);
-
+    setIsOpen(true);
     await analyze.mutateAsync({
       videoFile: selectedVideo,
       line1: watch("line1"),
@@ -118,18 +146,6 @@ const CustomStepper = () => {
       distance: watch("distance"),
       night: watch("night"),
       calibrationMode,
-    });
-  };
-  const handleZoomMove = (event: MouseEvent<HTMLDivElement>) => {
-    const bounds = event.currentTarget.getBoundingClientRect();
-    const x = event.clientX - bounds.left;
-    const y = event.clientY - bounds.top;
-
-    setZoomPosition({
-      x: Math.min(bounds.width, Math.max(0, x)),
-      y: Math.min(bounds.height, Math.max(0, y)),
-      width: bounds.width,
-      height: bounds.height,
     });
   };
 
@@ -189,7 +205,7 @@ const CustomStepper = () => {
 
   return (
     <>
-      <StatusSocket />
+      <StatusSocket isOpen={isOpen} setIsOpen={setIsOpen} />
       <Stepper
         className="animate-fade-in-up delay-100 text-white"
         steps={[
@@ -218,7 +234,7 @@ const CustomStepper = () => {
             </p>
           </div>
 
-          <div className="space-y-5 px-6 py-6 md:px-8 md:py-8">
+          <div className="space-y-5 px-6 py-6 md:px-8 md:py-8 d-flex flex-col gap-4 justify-content-center align-items-center">
             <label
               htmlFor="video"
               className={[
@@ -578,61 +594,13 @@ const CustomStepper = () => {
               </div>
             )}
           </div>
+          <PreviewModal
+            isPreviewOpen={isPreviewOpen}
+            setIsPreviewOpen={setIsPreviewOpen}
+            image={image}
+          />
         </div>
       )}
-      <Modal
-        show={isPreviewOpen}
-        onHide={() => setIsPreviewOpen(false)}
-        centered
-        size="xl"
-        contentClassName="border border-white/10 bg-slate-950/95 text-white rounded-[28px] overflow-hidden"
-      >
-        <Modal.Header
-          closeButton
-          closeVariant="white"
-          className="border-white/10 bg-white/[0.03]"
-        >
-          <Modal.Title className="text-lg font-semibold text-white">
-            Calibration Preview
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body className="bg-slate-950/95 p-3 md:p-5">
-          {image && (
-            <div className="space-y-4">
-              <div
-                className="relative overflow-hidden rounded-[20px] border border-white/10 bg-black/30"
-                onMouseEnter={() => setIsZoomVisible(true)}
-                onMouseLeave={() => setIsZoomVisible(false)}
-                onMouseMove={handleZoomMove}
-              >
-                <img
-                  src={image}
-                  alt="Calibration Preview Fullscreen"
-                  className="max-h-[80vh] w-full rounded-[20px] object-contain"
-                />
-
-                {isZoomVisible && (
-                  <div
-                    className="pointer-events-none absolute hidden h-44 w-44 -translate-x-1/2 -translate-y-1/2 overflow-hidden rounded-full border border-amber-300/70 bg-slate-950 shadow-[0_0_0_3px_rgba(15,23,42,0.45),0_20px_45px_rgba(0,0,0,0.35)] md:block"
-                    style={{
-                      left: `${zoomPosition.x}px`,
-                      top: `${zoomPosition.y}px`,
-                      backgroundImage: `url(${image})`,
-                      backgroundPosition: `${-zoomPosition.x * ZOOM_SCALE + LENS_SIZE / 2}px ${-zoomPosition.y * ZOOM_SCALE + LENS_SIZE / 2}px`,
-                      backgroundRepeat: "no-repeat",
-                      backgroundSize: `${zoomPosition.width * ZOOM_SCALE}px ${zoomPosition.height * ZOOM_SCALE}px`,
-                    }}
-                  />
-                )}
-              </div>
-
-              <p className="text-sm text-white/55">
-                Hover over the image to inspect details with 300% zoom.
-              </p>
-            </div>
-          )}
-        </Modal.Body>
-      </Modal>
     </>
   );
 };
